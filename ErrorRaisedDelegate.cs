@@ -1,10 +1,4 @@
-﻿
-// Type: Iso8583Simu.ErrorRaisedDelegate
-
-
-
-
-using System;
+﻿using System;
 
 namespace Iso8583Simu
 {

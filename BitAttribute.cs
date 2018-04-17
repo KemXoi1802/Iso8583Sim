@@ -1,9 +1,4 @@
-﻿// Decompiled with JetBrains decompiler
-// Type: Iso8583Simu.BitAttribute
-// Assembly: Iso8583Simu, Version=1.2.11.2007, Culture=neutral, PublicKeyToken=null
-// MVID: C5411956-B316-4CBA-92AE-51F12E6410B1
-// Assembly location: C:\Users\thuocnv\Desktop\TI Security Gateway\Iso8583Simu.dll
-
+﻿
 using System;
 using System.Text;
 

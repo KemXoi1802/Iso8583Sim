@@ -1,10 +1,4 @@
-﻿
-// Type: Iso8583Simu.EMVAnalyzer
-
-
-
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 

@@ -1,10 +1,4 @@
-﻿
-// Type: Iso8583Simu.DS_EMV_INFO
-
-
-
-
-using System;
+﻿using System;
 using System.CodeDom.Compiler;
 using System.Collections;
 using System.ComponentModel;

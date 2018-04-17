@@ -1,10 +1,4 @@
-﻿
-// Type: Iso8583Simu.EMV_TAG
-
-
-
-
-using System;
+﻿using System;
 using System.Collections;
 using System.Text;
 

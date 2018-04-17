@@ -1,10 +1,4 @@
-﻿
-// Type: Iso8583Simu.E_EMVShowOption
-
-
-
-
-using System;
+﻿using System;
 
 namespace Iso8583Simu
 {

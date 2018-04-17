@@ -1,10 +1,4 @@
-﻿
-// Type: Iso8583Simu.BitType
-
-
-
-
-namespace Iso8583Simu
+﻿namespace Iso8583Simu
 {
   public enum BitType
   {
