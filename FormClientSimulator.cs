@@ -5,6 +5,9 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using System.Net.Security;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Iso8583Simu
 {
@@ -149,54 +152,110 @@ namespace Iso8583Simu
             this.btnSendTCPIP.Enabled = false;
             try
             {
-                TcpClient client = (TcpClient)null;
                 iso8583Data = new Iso8583Data();
-                if (this.ckbOneConnection.Checked)
-                    client = new TcpClient(this.txtServer.Text, int.Parse(this.txtPort.Text));
-                for (int index = 0; (Decimal)index < this.numSendTimes.Value; ++index)
+                if (this.ckbSslEnable.Checked == true)
                 {
-                    try
+                    for (int index = 0; (Decimal)index < this.numSendTimes.Value; ++index)
                     {
-                        if (!this.ckbOneConnection.Checked)
-                            client = new TcpClient(this.txtServer.Text, int.Parse(this.txtPort.Text));
-                        this.txtRawResponse.Text = "";
-                        client.GetStream().ReadTimeout = 100000;
-                        transmittedData.Write(client.GetStream(), this.DataConverted(this.txtRawMessage, this.cbkANSI.Checked));
-                        client.GetStream().Flush();
-                        if (this.cbkANSI.Checked)
+                        try
                         {
-                            this.txtRawResponse.Text = Encoding.Default.GetString(this.buffer, 0, client.Client.Receive(this.buffer));
+                            this.txtRawResponse.Text = "";
+
+                            int hostBytesRead = 0;
+                            int timeout = 30;
+
+                            string _message = txtRawMessage.Text;
+                            byte[] hostMessage = new byte[4096];
+                            byte[] message = new byte[4096];
+                            hostBytesRead = 0;
+
+                            int inLengthFormat = 0;
+                            switch (this.cboLengthType.SelectedIndex)
+                            {
+                                case 0:
+                                    inLengthFormat = 2;
+                                    break;
+                                case 1:
+                                    inLengthFormat = 1;
+                                    break;
+                                default:
+                                    inLengthFormat = 0;
+                                    break;
+                            }
+                            string szLogMsg = "";
+                            hostMessage = SslSetup.HexString2Bytes(_message, inLengthFormat, out szLogMsg);
+                            SslClient sslHostClient = new SslClient(txtServer.Text.Trim(), int.Parse(txtPort.Text.Trim())
+                                , SslProtocols.Tls, timeout);
+                            int inConnect = sslHostClient.Connect();
+                            sslHostClient.Send(hostMessage);
+
+                            hostBytesRead = sslHostClient.Receive(ref message);
+                            if (hostBytesRead > 0)
+                            {
+                                String content = BitConverter.ToString(message, 0, hostBytesRead).Replace("-", "");
+
+                                if (content.Length > 4)
+                                {
+                                    txtRawResponse.Text = content.Substring(2, content.Length - 2);
+                                    iso8583Data.Unpack(message, 2, message.Length - 2);
+                                    this.txtResponse.Text = iso8583Data.LogFormat();
+                                }
+                            }
                         }
-                        else
-                        {
-                            transmittedData.Read(client, (int)this.numericUpDown1.Value, false);
-                            this.txtRawResponse.Text = IsoUltil.BytesToHexString(transmittedData.ReadMessage, 20, false);
-                            iso8583Data.Unpack(transmittedData.ReadMessage);
-                            this.txtResponse.Text = iso8583Data.LogFormat();
-                        }
-                        if (!this.ckbOneConnection.Checked)
-                        {
-                            client.Client.Shutdown(SocketShutdown.Both);
-                            client.Client.Disconnect(false);
-                            client.Client.Close();
-                        }
-                        if (this.numInterval.Value > new Decimal(0))
-                            Thread.Sleep((int)this.numInterval.Value);
-                    }
-                    catch (Exception ex)
-                    {
-                        this.txtResponse.Text = ex.ToString() + "\r\n";
-                        if (iso8583Data != null)
-                            this.txtResponse.Text += iso8583Data.LogFormat(iso8583Data.LastBitError);
-                        if (this.cbkStopWhenError.Checked)
-                            throw ex;
+                        catch { }
                     }
                 }
-                if (this.ckbOneConnection.Checked)
+                else
                 {
-                    client.Client.Shutdown(SocketShutdown.Both);
-                    client.Client.Disconnect(false);
-                    client.Client.Close();
+                    TcpClient client = (TcpClient)null;
+
+                    if (this.ckbOneConnection.Checked)
+                        client = new TcpClient(this.txtServer.Text, int.Parse(this.txtPort.Text));
+                    for (int index = 0; (Decimal)index < this.numSendTimes.Value; ++index)
+                    {
+                        try
+                        {
+                            if (!this.ckbOneConnection.Checked)
+                                client = new TcpClient(this.txtServer.Text, int.Parse(this.txtPort.Text));
+                            this.txtRawResponse.Text = "";
+                            client.GetStream().ReadTimeout = 100000;
+                            transmittedData.Write(client.GetStream(), this.DataConverted(this.txtRawMessage, this.cbkANSI.Checked));
+                            client.GetStream().Flush();
+                            if (this.cbkANSI.Checked)
+                            {
+                                this.txtRawResponse.Text = Encoding.Default.GetString(this.buffer, 0, client.Client.Receive(this.buffer));
+                            }
+                            else
+                            {
+                                transmittedData.Read(client, (int)this.numericUpDown1.Value, false);
+                                this.txtRawResponse.Text = IsoUltil.BytesToHexString(transmittedData.ReadMessage, 20, false);
+                                iso8583Data.Unpack(transmittedData.ReadMessage);
+                                this.txtResponse.Text = iso8583Data.LogFormat();
+                            }
+                            if (!this.ckbOneConnection.Checked)
+                            {
+                                client.Client.Shutdown(SocketShutdown.Both);
+                                client.Client.Disconnect(false);
+                                client.Client.Close();
+                            }
+                            if (this.numInterval.Value > new Decimal(0))
+                                Thread.Sleep((int)this.numInterval.Value);
+                        }
+                        catch (Exception ex)
+                        {
+                            this.txtResponse.Text = ex.ToString() + "\r\n";
+                            if (iso8583Data != null)
+                                this.txtResponse.Text += iso8583Data.LogFormat(iso8583Data.LastBitError);
+                            if (this.cbkStopWhenError.Checked)
+                                throw ex;
+                        }
+                    }
+                    if (this.ckbOneConnection.Checked)
+                    {
+                        client.Client.Shutdown(SocketShutdown.Both);
+                        client.Client.Disconnect(false);
+                        client.Client.Close();
+                    }
                 }
             }
             catch (Exception ex)

@@ -10,6 +10,7 @@ namespace Iso8583Simu
     {
         static void Main(string[] args)
         {
+            SslSetup.InstallCertificate();
             FormClientSimulator form = new FormClientSimulator();
             form.ShowDialog();
 

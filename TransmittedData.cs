@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
+using System.Net.Security;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Iso8583Simu
 {
@@ -13,6 +16,8 @@ namespace Iso8583Simu
         protected byte[] m_ReadMessage;
         protected EMessageLengthType m_LengthType;
         protected byte[] m_WrittenMessage;
+
+
 
         public EMessageLengthType LengthType
         {
@@ -104,7 +109,6 @@ namespace Iso8583Simu
         {
             this.m_LengthType = _LengthType;
         }
-
         public byte[] ReadMessage
         {
             get
@@ -144,6 +148,7 @@ namespace Iso8583Simu
             if (stream.DataAvailable)
                 throw new VerificationException("THERE ARE REDUNDANT BYTES", EVerificationError.MessageLengthError);
         }
+
 
         public void Read(TcpClient client, int TimeOut, bool isSource)
         {
